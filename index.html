@@ -337,7 +337,7 @@ function stylesXml(){
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="yyyy\\-mm\\-dd"/></numFmts>'+
   '<fonts count="3">'+fo(0,10)+fo(1,10)+fo(1,14)+'</fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/><bgColor indexed="64"/></patternFill></fill></fills>'+
   '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>'+bd+'</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'+
-  '<cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+xf(1,2,1,C)+xf(2,0,0,'horizontal="left" vertical="center"')+xf(0,0,1,C)+xf(0,0,1,'horizontal="left" vertical="center" wrapText="1"')+xf(0,0,1,C,164)+'</cellXfs></styleSheet>';
+  '<cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+xf(1,2,1,C)+xf(2,0,0,'horizontal="left" vertical="center"')+xf(0,0,1,C)+xf(0,0,1,C)+xf(0,0,1,C,164)+'</cellXfs></styleSheet>';
 }
 function sheetXml(){
   const E=entries(),R={},ht={1:33,3:48},add=(r,x)=>{R[r]=(R[r]||'')+x},hasP=E.some(p=>p.data),I=dInfo(S.date);
@@ -356,9 +356,8 @@ function sheetXml(){
 function drawingXml(){
   const EMU=9525;let a='',j=0;
   entries().forEach((p,i)=>{
-    if(!p.data)return;j++;
-    const k=Math.min(BOX_W/p.w,BOX_H/p.h),w=Math.round(p.w*k),h=Math.round(p.h*k),ox=Math.round((COLO_PX-w)/2)*EMU,oy=Math.max(0,Math.round((ROWPX-h)/2))*EMU,r=FIRST-1+i,cx=w*EMU,cy=h*EMU;
-    a+=`<xdr:twoCellAnchor editAs="twoCell"><xdr:from><xdr:col>14</xdr:col><xdr:colOff>${ox}</xdr:colOff><xdr:row>${r}</xdr:row><xdr:rowOff>${oy}</xdr:rowOff></xdr:from><xdr:to><xdr:col>14</xdr:col><xdr:colOff>${ox+cx}</xdr:colOff><xdr:row>${r}</xdr:row><xdr:rowOff>${oy+cy}</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${j+1}" name="불량 ${i+1}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${j}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`;
+    if(!p.data)return;j++;const r=FIRST-1+i;
+    a+=`<xdr:twoCellAnchor editAs="twoCell"><xdr:from><xdr:col>14</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>15</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r+1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${j+1}" name="불량 ${i+1}"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${j}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`;
   });
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+a+'</xdr:wsDr>';
 }
