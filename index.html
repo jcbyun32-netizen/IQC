@@ -131,7 +131,7 @@ h1{font-size:1.7rem}.sub{font-size:1.05rem}.lb{font-size:1rem}
 <main id="app"></main>
 
 <script>
-const KEY='ls_iqc_photo_v1',NAME_KEY='ls_oqc_inspector_v1',MAXN=20;
+const KEY='ls_iqc_photo_v1',NAME_KEY='ls_oqc_inspector_v1',MAXN=100;
 const MODELS={'M-LINK':{pfx:['MRK00735AA-L LEG'],len:9},'E-PANEL':{pfx:['MRK00712AC PAA','MRK00710AC PAA','MRK00712AA PAA'],len:10}};
 const CAUSE=["자재 요소", "불명확", "인적 요소"],GRP={"외관": ["외관 불량", "코킹 작업 불량", "가공 치수·홀 불량", "오염", "마감 불량", "누수"], "표시 불량": ["아이마킹 불량/누락", "인쇄·라벨 불량/누락"], "파손": ["파손"], "가스켓": ["가스켓 불량 (밀착, 접힘)"], "조립·체결": ["조립 마감 불량", "설체결", "작업 누락"]},PART=["D-FLAG PANEL", "INTAKE FAN", "P-cover", "RACK", "가스켓", "도장", "리미트 스위치, 센서", "리벳", "배수관로", "볼트류", "스티커·라벨", "스패터", "스펀지", "실리콘", "아크릴", "워터웨이", "접지블럭", "차수막", "커넥터", "케이지 너트", "플레이트", "핀홀", "홀", "힌지", "기타"],DETAIL=["도장 마감 불량", "도장 이물질 오염", "P-COVER 스크래치", "도장 색상 불일치", "코킹 마감 불량", "도장 찍힘", "케이지 너트 페인트 오염", "도장 핀홀", "볼트 아이마킹 누락", "가스켓 페인트 오염", "도장 스크래치", "차수막 넘침", "라벨 인쇄 불량", "도장 까짐", "도장 오염", "칠러 스펀지 찍힘", "배수관로 코킹 누락", "코킹 누락", "힌지 도장 마감 불량", "가스켓 실리콘 오염", "코킹 핀홀", "녹 발생", "도장 실리콘 오염", "스패터", "리벳 코킹 마감 불량", "접지 블록 코킹 마감 불량", "볼트 페인트 오염", "아이마킹 누락", "브라켓 피스 누락", "배수관로 코킹 마감 불량", "실리콘 마감 불량", "스패터, 도장 마감 불량", "코킹 이물질 오염", "핀홀, 도장 마감 불량", "인테이크 팬 도장 오염", "케이지 너트 아이마킹 누락", "워터웨이 가공 미흡", "케이지 너트 아이마킹 불량", "접지블럭 실리콘 오염", "좌측 루프벤트 누수", "볼트 이물질 오염", "아크릴 보호필름 들뜸", "HVAC 코킹 마감 불량", "도장 긁힘", "도장 뭉침", "리미트 센서 브라켓 누락", "도장 박리", "가스켓 이물질 오염", "드렁킹 커버 누락", "케이지 너트 마감 불량", "볼트 누락", "접지 코킹 누락", "브라켓 볼트 누락", "랙 도장 마감 불량", "도어 코킹 마감 불량", "용접 마감 불량", "칠러 코킹 마감 불량", "랙 도장 찍힘", "루프 도어 센서 아이마킹 누락", "루프 프레임 도장 찍힘"],GRADE=["중결함"];
 const ALLSUB=[].concat(...Object.values(GRP)),FK=['cause','grp','sub','part','detail','grade'];
@@ -147,7 +147,7 @@ function load(){
   if(!S.date)S.date=today();
   if(S.model&&!MODELS[S.model]){S.model='';S.screen='start'}
 }
-function save(){if(!safeSet(KEY,JSON.stringify(S))&&!warned){warned=true;tell('브라우저 저장 공간이 부족해 임시저장이 되지 않습니다.\n이 페이지를 닫지 말고 계속 진행해 주세요.')}}
+function save(){if(!safeSet(KEY,JSON.stringify(S))){safeSet(KEY,JSON.stringify(Object.assign({},S,{rows:S.rows.map(r=>Object.assign({},r,{data:'',w:0,h:0}))})));if(!warned){warned=true;tell('브라우저 저장 공간이 부족해 임시저장이 되지 않습니다.\n이 페이지를 닫지 말고 계속 진행해 주세요.')}}}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
