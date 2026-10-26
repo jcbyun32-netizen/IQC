@@ -132,12 +132,12 @@ h1{font-size:1.7rem}.sub{font-size:1.05rem}.lb{font-size:1rem}
 
 <script>
 const KEY='ls_iqc_photo_v1',NAME_KEY='ls_oqc_inspector_v1',MAXN=100;
-const MODELS={'M-LINK':{pfx:['MRK00735AA-L LEG'],len:9},'E-PANEL':{pfx:['MRK00712AC PAA','MRK00710AC PAA','MRK00712AA PAA'],len:10}};
+const MODELS={'M-LINK':{pfx:['MRK00735AA-L LEG'],len:9,vendors:['정광','SJ']},'E-PANEL':{pfx:['MRK00712AC PAA','MRK00710AC PAA','MRK00712AA PAA'],len:10}};
 const CAUSE=["자재 요소", "불명확", "인적 요소"],GRP={"외관": ["외관 불량", "코킹 작업 불량", "가공 치수·홀 불량", "오염", "마감 불량", "누수"], "표시 불량": ["아이마킹 불량/누락", "인쇄·라벨 불량/누락"], "파손": ["파손"], "가스켓": ["가스켓 불량 (밀착, 접힘)"], "조립·체결": ["조립 마감 불량", "설체결", "작업 누락"]},PART=["D-FLAG PANEL", "INTAKE FAN", "P-cover", "RACK", "가스켓", "도장", "리미트 스위치, 센서", "리벳", "배수관로", "볼트류", "스티커·라벨", "스패터", "스펀지", "실리콘", "아크릴", "워터웨이", "접지블럭", "차수막", "커넥터", "케이지 너트", "플레이트", "핀홀", "홀", "힌지", "기타"],DETAIL=["도장 마감 불량", "도장 이물질 오염", "P-COVER 스크래치", "도장 색상 불일치", "코킹 마감 불량", "도장 찍힘", "케이지 너트 페인트 오염", "도장 핀홀", "볼트 아이마킹 누락", "가스켓 페인트 오염", "도장 스크래치", "차수막 넘침", "라벨 인쇄 불량", "도장 까짐", "도장 오염", "칠러 스펀지 찍힘", "배수관로 코킹 누락", "코킹 누락", "힌지 도장 마감 불량", "가스켓 실리콘 오염", "코킹 핀홀", "녹 발생", "도장 실리콘 오염", "스패터", "리벳 코킹 마감 불량", "접지 블록 코킹 마감 불량", "볼트 페인트 오염", "아이마킹 누락", "브라켓 피스 누락", "배수관로 코킹 마감 불량", "실리콘 마감 불량", "스패터, 도장 마감 불량", "코킹 이물질 오염", "핀홀, 도장 마감 불량", "인테이크 팬 도장 오염", "케이지 너트 아이마킹 누락", "워터웨이 가공 미흡", "케이지 너트 아이마킹 불량", "접지블럭 실리콘 오염", "좌측 루프벤트 누수", "볼트 이물질 오염", "아크릴 보호필름 들뜸", "HVAC 코킹 마감 불량", "도장 긁힘", "도장 뭉침", "리미트 센서 브라켓 누락", "도장 박리", "가스켓 이물질 오염", "드렁킹 커버 누락", "케이지 너트 마감 불량", "볼트 누락", "접지 코킹 누락", "브라켓 볼트 누락", "랙 도장 마감 불량", "도어 코킹 마감 불량", "용접 마감 불량", "칠러 코킹 마감 불량", "랙 도장 찍힘", "루프 도어 센서 아이마킹 누락", "루프 프레임 도장 찍힘"],GRADE=["중결함"];
 const ALLSUB=[].concat(...Object.values(GRP)),FK=['cause','grp','sub','part','detail','grade'];
 const blankE=()=>({data:'',w:0,h:0,cause:'',grp:'',sub:'',part:'',detail:'',grade:''});
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-let S={screen:'start',model:'',pfx:'',rest:'',inspector:'',date:'',rows:[blankE()],saved:false,lineout:false,reason:''};
+let S={screen:'start',model:'',vendor:'',pfx:'',rest:'',inspector:'',date:'',rows:[blankE()],saved:false,lineout:false,reason:''};
 let cur=0,warned=false;
 function safeGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function safeSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
@@ -145,7 +145,7 @@ function load(){
   try{const j=safeGet(KEY);if(j){const o=JSON.parse(j);if(o&&Array.isArray(o.rows)&&o.rows.length){S=Object.assign(S,o)}}}catch(e){}
   const n=safeGet(NAME_KEY);if(n&&!S.inspector)S.inspector=n;
   if(!S.date)S.date=today();
-  if(S.model&&!MODELS[S.model]){S.model='';S.screen='start'}
+  if(S.model&&!MODELS[S.model]){S.model='';S.vendor='';S.screen='start'}
 }
 function save(){if(!safeSet(KEY,JSON.stringify(S))){safeSet(KEY,JSON.stringify(Object.assign({},S,{rows:S.rows.map(r=>Object.assign({},r,{data:'',w:0,h:0}))})));if(!warned){warned=true;tell('브라우저 저장 공간이 부족해 임시저장이 되지 않습니다.\n이 페이지를 닫지 말고 계속 진행해 주세요.')}}}
 const $=id=>document.getElementById(id);
@@ -229,7 +229,11 @@ function renderStart(){
     $('app').innerHTML=`<section class="card"><h1>IQC 불량 사진 정리</h1><p class="sub">제품을 선택하세요.</p>${Object.keys(MODELS).map(k=>`<button class="tp" onclick="selModel('${k}')">${k}</button>`).join('')}</section>`;return;
   }
   const M=MODELS[S.model];
-  $('app').innerHTML=`<section class="card"><h1>${S.model} IQC</h1><p class="sub">검수자·검사일·시리얼을 입력하고 시작하세요.</p>
+  if(M.vendors&&!S.vendor){
+    $('app').innerHTML=`<section class="card"><h1>${S.model} IQC</h1><p class="sub">업체를 선택하세요.</p>${M.vendors.map(v=>`<button class="tp" onclick="selVendor('${v}')">${v}</button>`).join('')}<button class="mid" style="margin-top:.75rem" onclick="S.model='';S.vendor='';save();render()">◀ 제품 다시 선택</button></section>`;return;
+  }
+  const VN=S.model+(S.vendor?' '+S.vendor:'');
+  $('app').innerHTML=`<section class="card"><h1>${VN} IQC</h1><p class="sub">검수자·검사일·시리얼을 입력하고 시작하세요.</p>
   <label class="lb" for="insp">검수자</label>
   <input id="insp" class="in" style="margin-bottom:1.25rem" type="text" placeholder="예: 홍길동" value="${esc(S.inspector)}" oninput="S.inspector=this.value;safeSet(NAME_KEY,this.value);save()">
   <label class="lb" for="dt">검사일 (엑셀 B열 날짜)</label>
@@ -239,9 +243,10 @@ function renderStart(){
   <div class="row"><span class="pre" style="font-size:1.05rem;white-space:nowrap">${esc(S.pfx)}</span>
   <input id="rest" class="in" style="flex:1;min-width:0" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="숫자 ${M.len}자리" value="${esc(S.rest)}" oninput="S.rest=cleanRest(this.value);this.value=S.rest;save()"></div>
   <button class="big" onclick="startInspect()">검사 시작</button><p id="err" class="err" style="display:none"></p>
-  <button class="mid" style="margin-top:.75rem" onclick="S.model='';save();render()">◀ 제품 다시 선택</button></section>`;
+  <button class="mid" style="margin-top:.75rem" onclick="${M.vendors?"S.vendor='';save();render()":"S.model='';S.vendor='';save();render()"}">${M.vendors?'◀ 업체 다시 선택':'◀ 제품 다시 선택'}</button></section>`;
 }
-function selModel(k){S.model=k;S.pfx=MODELS[k].pfx[0];S.rest='';if(!S.date)S.date=today();save();render()}
+function selVendor(v){S.vendor=v;save();render()}
+function selModel(k){S.model=k;S.vendor='';S.pfx=MODELS[k].pfx[0];S.rest='';if(!S.date)S.date=today();save();render()}
 function setPfx(v){S.pfx=v;S.rest=cleanRest(S.rest);save();render()}
 async function startInspect(){
   const e=$('err'),bad=(m,id)=>{e.textContent=m;e.style.display='';$(id).focus()};
@@ -269,7 +274,7 @@ function rowHtml(e,i){
 }
 function renderInspect(){
   const y=window.scrollY;
-  $('app').innerHTML=`<section class="card"><div class="meta">${esc(S.model)} · 검수자 ${esc(S.inspector)} · ${esc(S.date)}</div><div class="serial" style="font-size:1.2rem">${esc(serial())}</div></section>
+  $('app').innerHTML=`<section class="card"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · 검수자 ${esc(S.inspector)} · ${esc(S.date)}</div><div class="serial" style="font-size:1.2rem">${esc(serial())}</div></section>
   <div class="meta" style="margin:0 .25rem .6rem">불량 1건(사진 1장)이 엑셀 1행이 됩니다 (최대 ${MAXN}건)</div>
   ${S.rows.map(rowHtml).join('')}
   ${S.rows.length<MAXN?'<button class="mid" style="margin-bottom:.75rem" onclick="addRow()">＋ 불량 추가</button>':''}
@@ -319,7 +324,7 @@ function dataRows(){const E=entries();return S.lineout?[Object.assign(blankE(),{
 /* ---------- 3. 확인 및 엑셀 저장 ---------- */
 function renderReview(){
   const E=entries();
-  $('app').innerHTML=`<div class="rv"><section class="card sum"><div class="meta">${esc(S.model)} · IQC</div><div class="serial">${esc(serial())}</div>
+  $('app').innerHTML=`<div class="rv"><section class="card sum"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · IQC</div><div class="serial">${esc(serial())}</div>
   <div class="meta" style="margin-top:.4rem">검수자 ${esc(S.inspector)} · 검사일 ${esc(S.date)}</div><div class="err" style="margin-top:.5rem">${S.lineout?'라인아웃 · ':''}불량 ${E.length}건</div>${S.lineout?`<div class="meta" style="margin-top:.4rem">사유: ${esc(S.reason)}</div>`:''}</section>
   <section class="card thb"><div class="thumbs">${E.map((p,i)=>`<div class="th">${p.data?`<img src="${p.data}" alt="">`:''}<p><b>#${i+1}</b> ${esc([p.cause,p.grp,p.sub,p.part].filter(Boolean).join(' / '))}<br>${esc(p.detail||'')}</p></div>`).join('')}</div></section>
   <div class="rb" style="display:grid;gap:.5rem"><button class="big" onclick="downloadXlsx()">엑셀(.xlsx) 저장${S.saved?' (다시 저장)':''}</button>
@@ -330,7 +335,7 @@ function renderReview(){
 function newUnit(){S.lineout=false;S.reason='';S.rows=[blankE()];S.rest='';S.saved=false;S.screen='start';save();render();window.scrollTo(0,0)}
 async function resetAll(skip){
   if(skip!==true&&!(await ask('현재 입력한 사진과 내용을 지우고 처음 화면으로 돌아갈까요?\n저장하지 않은 데이터는 사라집니다.','처음으로')))return;
-  S={screen:'start',model:'',pfx:'',rest:'',inspector:S.inspector,date:S.date||today(),rows:[blankE()],saved:false,lineout:false,reason:''};
+  S={screen:'start',model:'',vendor:'',pfx:'',rest:'',inspector:S.inspector,date:S.date||today(),rows:[blankE()],saved:false,lineout:false,reason:''};
   save();render();window.scrollTo(0,0);
 }
 /* ---------- 엑셀: 취합 시트와 동일한 A~O열 (3행 머리글, 4행부터 데이터) ---------- */
