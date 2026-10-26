@@ -274,7 +274,7 @@ function rowHtml(e,i){
 }
 function renderInspect(){
   const y=window.scrollY;
-  $('app').innerHTML=`<section class="card"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · 검수자 ${esc(S.inspector)} · ${esc(S.date)}</div><div class="serial" style="font-size:1.2rem">${esc(serial())}</div></section>
+  $('app').innerHTML=`<section class="card"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · 검수자 ${esc(S.inspector)} · ${esc(S.date)}</div><div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem"><div class="serial" style="font-size:1.2rem">${esc(serial())}</div><button style="font-size:.85rem;font-weight:700;padding:.5rem .8rem;border-radius:.5rem;background:var(--soft);color:var(--brand);flex:none" onclick="editSerial()">✏️ S/N 수정</button></div></section>
   <div class="meta" style="margin:0 .25rem .6rem">불량 1건(사진 1장)이 엑셀 1행이 됩니다 (최대 ${MAXN}건)</div>
   ${S.rows.map(rowHtml).join('')}
   ${S.rows.length<MAXN?'<button class="mid" style="margin-bottom:.75rem" onclick="addRow()">＋ 불량 추가</button>':''}
@@ -284,6 +284,28 @@ function renderInspect(){
   <input id="fCam" type="file" accept="image/*" capture="environment" hidden onchange="addFile(this)">
   <input id="fPick" type="file" accept="image/*" multiple hidden onchange="addFiles(this)">`;
   window.scrollTo(0,y);
+}
+
+/* ---------- 검사 중 시리얼 수정 ---------- */
+function editSerial(){
+  const M=MODELS[S.model];let pfx=S.pfx;
+  const d=document.createElement('div');d.className='ov';
+  d.innerHTML='<div class="dlg" style="display:block"><p style="margin-bottom:.75rem">시리얼 번호 수정</p><div id="esPf" style="display:grid;grid-template-columns:1fr;gap:.5rem;margin-bottom:.75rem"></div><div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem"><span id="esPre" style="font-weight:800;white-space:nowrap"></span><input id="esRest" class="in" style="flex:1;min-width:0" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off"></div><p id="esErr" class="err" style="display:none;margin:0 0 .5rem"></p><div style="display:flex;gap:.5rem"><button id="esC">취소</button><button id="esO" class="p">저장</button></div></div>';
+  document.body.appendChild(d);
+  const pf=d.querySelector('#esPf'),pre=d.querySelector('#esPre'),inp=d.querySelector('#esRest'),er=d.querySelector('#esErr');
+  const drawPf=()=>{pre.textContent=pfx;if(M.pfx.length<2){pf.style.display='none';return}
+    pf.innerHTML='';M.pfx.forEach(o=>{const b=document.createElement('button');b.className='pf'+(o===pfx?' on':'');b.style.fontSize='1rem';b.textContent=o;b.onclick=()=>{pfx=o;drawPf()};pf.appendChild(b)})};
+  drawPf();inp.value=S.rest;
+  inp.oninput=()=>{let t=inp.value.toUpperCase().replace(/\s/g,'');const pp=pfx.replace(/\s/g,'');if(pp&&t.startsWith(pp))t=t.slice(pp.length);inp.value=t.replace(/\D/g,'')};
+  d.querySelector('#esC').onclick=()=>d.remove();
+  d.querySelector('#esO').onclick=async()=>{
+    const r=inp.value.trim();
+    if(!r){er.textContent='시리얼 뒤 숫자를 입력해 주세요.';er.style.display='';inp.focus();return}
+    const L=M.len,warn=r.length!==L?'\n\n※ 뒤 숫자가 '+r.length+'자리입니다 (보통 '+L+'자리)':'';
+    if(!(await ask('S/N을 아래로 변경할까요?\n\n'+pfx+r+warn,'변경','다시 입력')))return;
+    S.pfx=pfx;S.rest=r;S.saved=false;save();d.remove();render();
+  };
+  setTimeout(()=>inp.focus(),50);
 }
 function selCh(i,k,v){const e=S.rows[i];if(v==='__c'){e['_c'+k]=true;e[k]=''}else{e[k]=v;e['_c'+k]=false}
   if(k==='grp'&&GRP[v]&&!GRP[v].includes(e.sub))e.sub='';save();renderInspect()}
