@@ -119,6 +119,8 @@ h1{font-size:1.7rem}.sub{font-size:1.05rem}.lb{font-size:1rem}
 .tp{height:6rem;font-size:1.6rem}
 .dlg p{font-size:1.1rem}
 .pfb{display:grid;gap:.6rem;margin-bottom:.75rem}.pfb .pf{height:auto;padding:.6rem .4rem;font-size:1.1rem;line-height:1.35}.pfb .pf small{font-size:.85rem;font-weight:700}
+.thr{display:flex;align-items:center;justify-content:space-between;margin-top:.3rem}.dx{font-size:.8rem;font-weight:700;color:var(--danger);padding:.35rem .6rem;border-radius:.5rem;background:var(--soft)}
+.th img{aspect-ratio:4/3}
 </style>
 </head>
 <body>
@@ -131,29 +133,28 @@ h1{font-size:1.7rem}.sub{font-size:1.05rem}.lb{font-size:1rem}
 <main id="app"></main>
 
 <script>
-const KEY='ls_iqc_photo_v1',NAME_KEY='ls_oqc_inspector_v1',MAXN=100;
+const KEY='ls_iqc_photo_v2',NAME_KEY='ls_oqc_inspector_v1',MAXN=100;
 const MODELS={'M-LINK':{pfx:['MRK00735AA-L LEG'],len:9,vendors:['정광','SJ']},'E-PANEL':{pfx:['MRK00712AC PAA','MRK00710AC PAA','MRK00712AA PAA'],len:10}};
-const CAUSE=["자재 요소", "불명확", "인적 요소"],GRP={"외관": ["외관 불량", "코킹 작업 불량", "가공 치수·홀 불량", "오염", "마감 불량", "누수"], "표시 불량": ["아이마킹 불량/누락", "인쇄·라벨 불량/누락"], "파손": ["파손"], "가스켓": ["가스켓 불량 (밀착, 접힘)"], "조립·체결": ["조립 마감 불량", "설체결", "작업 누락"]},PART=["D-FLAG PANEL", "INTAKE FAN", "P-cover", "RACK", "가스켓", "도장", "리미트 스위치, 센서", "리벳", "배수관로", "볼트류", "스티커·라벨", "스패터", "스펀지", "실리콘", "아크릴", "워터웨이", "접지블럭", "차수막", "커넥터", "케이지 너트", "플레이트", "핀홀", "홀", "힌지", "기타"],DETAIL=["도장 마감 불량", "도장 이물질 오염", "P-COVER 스크래치", "도장 색상 불일치", "코킹 마감 불량", "도장 찍힘", "케이지 너트 페인트 오염", "도장 핀홀", "볼트 아이마킹 누락", "가스켓 페인트 오염", "도장 스크래치", "차수막 넘침", "라벨 인쇄 불량", "도장 까짐", "도장 오염", "칠러 스펀지 찍힘", "배수관로 코킹 누락", "코킹 누락", "힌지 도장 마감 불량", "가스켓 실리콘 오염", "코킹 핀홀", "녹 발생", "도장 실리콘 오염", "스패터", "리벳 코킹 마감 불량", "접지 블록 코킹 마감 불량", "볼트 페인트 오염", "아이마킹 누락", "브라켓 피스 누락", "배수관로 코킹 마감 불량", "실리콘 마감 불량", "스패터, 도장 마감 불량", "코킹 이물질 오염", "핀홀, 도장 마감 불량", "인테이크 팬 도장 오염", "케이지 너트 아이마킹 누락", "워터웨이 가공 미흡", "케이지 너트 아이마킹 불량", "접지블럭 실리콘 오염", "좌측 루프벤트 누수", "볼트 이물질 오염", "아크릴 보호필름 들뜸", "HVAC 코킹 마감 불량", "도장 긁힘", "도장 뭉침", "리미트 센서 브라켓 누락", "도장 박리", "가스켓 이물질 오염", "드렁킹 커버 누락", "케이지 너트 마감 불량", "볼트 누락", "접지 코킹 누락", "브라켓 볼트 누락", "랙 도장 마감 불량", "도어 코킹 마감 불량", "용접 마감 불량", "칠러 코킹 마감 불량", "랙 도장 찍힘", "루프 도어 센서 아이마킹 누락", "루프 프레임 도장 찍힘"],GRADE=["중결함"];
-const ALLSUB=[].concat(...Object.values(GRP)),FK=['cause','grp','sub','part','detail','grade'];
-const blankE=()=>({data:'',w:0,h:0,cause:'',grp:'',sub:'',part:'',detail:'',grade:''});
+const blankE=()=>({data:'',w:0,h:0,detail:''});
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-let S={screen:'start',model:'',vendor:'',pfx:'',rest:'',inspector:'',date:'',rows:[blankE()],saved:false,lineout:false,reason:''};
+let S={screen:'start',model:'',vendor:'',pfx:'',rest:'',inspector:'',date:'',rows:[],punch:[],saved:false,lineout:false,reason:''};
 let cur=0,warned=false;
 function safeGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function safeSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
 function load(){
-  try{const j=safeGet(KEY);if(j){const o=JSON.parse(j);if(o&&Array.isArray(o.rows)&&o.rows.length){S=Object.assign(S,o)}}}catch(e){}
+  try{const j=safeGet(KEY);if(j){const o=JSON.parse(j);if(o&&Array.isArray(o.rows)){S=Object.assign(S,o)}}}catch(e){}
   const n=safeGet(NAME_KEY);if(n&&!S.inspector)S.inspector=n;
   if(!S.date)S.date=today();
+  if(!Array.isArray(S.punch))S.punch=[];
   if(S.model&&!MODELS[S.model]){S.model='';S.vendor='';S.screen='start'}
 }
-function save(){if(!safeSet(KEY,JSON.stringify(S))){safeSet(KEY,JSON.stringify(Object.assign({},S,{rows:S.rows.map(r=>Object.assign({},r,{data:'',w:0,h:0}))})));if(!warned){warned=true;tell('브라우저 저장 공간이 부족해 임시저장이 되지 않습니다.\n이 페이지를 닫지 말고 계속 진행해 주세요.')}}}
+function save(){if(!safeSet(KEY,JSON.stringify(S))){safeSet(KEY,JSON.stringify(Object.assign({},S,{rows:S.rows.map(r=>Object.assign({},r,{data:'',w:0,h:0})),punch:[]})));if(!warned){warned=true;tell('브라우저 저장 공간이 부족해 임시저장이 되지 않습니다.\n이 페이지를 닫지 말고 계속 진행해 주세요.')}}}
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const serial=()=>S.pfx+S.rest.trim();
 const cleanRest=v=>{let t=String(v||'').toUpperCase().replace(/\s/g,'');const pp=S.pfx.replace(/\s/g,'');if(pp&&t.startsWith(pp))t=t.slice(pp.length);return t.replace(/\D/g,'')};
-const entries=()=>S.rows.filter(e=>e.data||FK.some(k=>(e[k]||'').trim()));
+const entries=()=>S.rows.filter(e=>e.data);
 function ask(msg,okText,cancelText){
   okText=okText||'확인';
   return new Promise(res=>{
@@ -220,6 +221,7 @@ function b64ToBytes(d){const b=atob(d.split(',')[1]),u=new Uint8Array(b.length);
 function render(){
   $('resetBtn').style.display=S.screen==='start'?'none':'';
   if(S.screen==='inspect')return renderInspect();
+  if(S.screen==='punch')return renderPunch();
   if(S.screen==='review')return renderReview();
   renderStart();
 }
@@ -255,32 +257,17 @@ async function startInspect(){
   if(!S.rest.trim())return bad('시리얼 뒤 숫자를 입력해 주세요.','rest');
   const L=MODELS[S.model].len,warn=S.rest.trim().length!==L?'\n\n※ 뒤 숫자가 '+S.rest.trim().length+'자리입니다 (보통 '+L+'자리)':'';
   if(!(await ask('S/N이 맞습니까?\n\n'+serial()+warn,'확인','수정')))return;
-  S.rows=[blankE()];S.saved=false;S.lineout=false;S.reason='';S.screen='inspect';save();render();window.scrollTo(0,0);
+  S.rows=[];S.punch=[];S.saved=false;S.lineout=false;S.reason='';S.screen='inspect';save();render();window.scrollTo(0,0);
 }
 /* ---------- 2. 검사 (불량 1건 = 엑셀 1행) ---------- */
-function selH(i,k,list,ph){
-  const e=S.rows[i],v=e[k]||'';
-  if(e['_c'+k]||(v&&!list.includes(v)))return `<div class="row" style="margin:.5rem 0 0"><input class="in" style="flex:1;min-width:0" placeholder="${ph} 직접입력" value="${esc(v)}" oninput="setR(${i},'${k}',this.value)"><button class="mid" style="width:4.5rem;flex:none" onclick="selCh(${i},'${k}','')">목록</button></div>`;
-  return `<select class="in" style="margin-top:.5rem" onchange="selCh(${i},'${k}',this.value)"><option value="">${ph}</option>${list.map(x=>`<option${x===v?' selected':''}>${esc(x)}</option>`).join('')}<option value="__c">직접입력…</option></select>`;
-}
-function rowHtml(e,i){
-  const f=e.data||FK.some(k=>(e[k]||'').trim());
-  return `<section class="card ph"><div class="top"><span class="no">불량 ${i+1}</span><span><button class="del" onclick="dup(${i})">복제</button> <button class="del" onclick="delRow(${i})">삭제</button></span></div>
-  <div class="srow">${e.data?`<img class="mini" src="${e.data}" alt="">`:'<div class="mini none">사진 없음</div>'}
-  <div class="sb"><button class="mid" onclick="pick(${i},'fCam')">📷 ${e.data?'다시 촬영':'촬영'}</button><button class="mid" onclick="pick(${i},'fPick')">🖼 앨범</button></div></div>
-  ${selH(i,'cause',CAUSE,'발생원인')}${selH(i,'grp',Object.keys(GRP),'불량현상_구분')}${selH(i,'sub',GRP[e.grp]||ALLSUB,'불량현상_세부')}${selH(i,'part',PART,'대상부품/부위')}
-  <input class="in" style="margin-top:.5rem" list="dl" placeholder="불량현상_상세" value="${esc(e.detail||'')}" oninput="setR(${i},'detail',this.value)">
-  ${selH(i,'grade',GRADE,'결함등급 (없으면 비움)')}</section>`;
-}
 function renderInspect(){
-  const y=window.scrollY;
+  const y=window.scrollY,n=S.rows.length,full=n>=MAXN;
   $('app').innerHTML=`<section class="card"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · 검수자 ${esc(S.inspector)} · ${esc(S.date)}</div><div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem"><div class="serial" style="font-size:1.2rem">${esc(serial())}</div><button style="font-size:.85rem;font-weight:700;padding:.5rem .8rem;border-radius:.5rem;background:var(--soft);color:var(--brand);flex:none" onclick="editSerial()">✏️ S/N 수정</button></div></section>
-  <div class="meta" style="margin:0 .25rem .6rem">불량 1건(사진 1장)이 엑셀 1행이 됩니다 (최대 ${MAXN}건)</div>
-  ${S.rows.map(rowHtml).join('')}
-  ${S.rows.length<MAXN?'<button class="mid" style="margin-bottom:.75rem" onclick="addRow()">＋ 불량 추가</button>':''}
-  <div class="sticky"><button class="big" onclick="complete()">엑셀 저장 화면으로 (${entries().length}건)</button>
+  <div class="btns"><button class="cam" ${full?'disabled':''} onclick="$('fCam').click()">📷 촬영</button><button class="cam alt" ${full?'disabled':''} onclick="$('fPick').click()">🖼 앨범에서<br>여러 장 올리기</button></div>
+  <div class="meta" style="margin:0 .25rem .6rem">사진 1장이 엑셀 1행이 됩니다 · 현재 ${n}장 (최대 ${MAXN}장)</div>
+  ${n?`<div class="thumbs" style="margin-bottom:.75rem">${S.rows.map((p,i)=>`<div class="th"><img src="${p.data}" alt=""><div class="thr"><b>#${i+1}</b><button class="dx" onclick="delRow(${i})">삭제</button></div></div>`).join('')}</div>`:'<div class="empty">아직 사진이 없습니다.<br>촬영하거나 앨범에서 올려 주세요.</div>'}
+  <div class="sticky"><button class="big" onclick="complete()">엑셀 저장 화면으로 (${n}장)</button>
   <button class="mid" style="height:auto;padding:.6rem;margin-top:.5rem;border-color:var(--danger);color:var(--danger)" onclick="lineOut()">라인아웃 (검사 중단)</button></div>
-  <datalist id="dl">${DETAIL.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
   <input id="fCam" type="file" accept="image/*" capture="environment" hidden onchange="addFile(this)">
   <input id="fPick" type="file" accept="image/*" multiple hidden onchange="addFiles(this)">`;
   window.scrollTo(0,y);
@@ -307,31 +294,26 @@ function editSerial(){
   };
   setTimeout(()=>inp.focus(),50);
 }
-function selCh(i,k,v){const e=S.rows[i];if(v==='__c'){e['_c'+k]=true;e[k]=''}else{e[k]=v;e['_c'+k]=false}
-  if(k==='grp'&&GRP[v]&&!GRP[v].includes(e.sub))e.sub='';save();renderInspect()}
-function setR(i,k,v){S.rows[i][k]=v;save()}
-function pick(i,id){cur=i;$(id).click()}
-function addRow(){if(S.rows.length<MAXN){S.rows.push(blankE());save();renderInspect()}}
-function dup(i){if(S.rows.length>=MAXN)return;const c=Object.assign({},S.rows[i],{data:'',w:0,h:0});S.rows.splice(i+1,0,c);save();renderInspect()}
-async function delRow(i){if(!(await ask('불량 '+(i+1)+' 을(를) 삭제할까요?','삭제')))return;S.rows.splice(i,1);if(!S.rows.length)S.rows.push(blankE());save();renderInspect()}
+async function delRow(i){if(!(await ask('사진 #'+(i+1)+' 을(를) 삭제할까요?','삭제')))return;S.rows.splice(i,1);save();renderInspect()}
 async function addFile(inp){
   const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
-  try{const p=await fileToPhoto(f);Object.assign(S.rows[cur],{data:p.data,w:p.w,h:p.h})}catch(e){await tell('사진을 불러오지 못했습니다.');return}
+  if(S.rows.length>=MAXN){await tell('최대 '+MAXN+'장까지 가능합니다.');return}
+  try{const p=await fileToPhoto(f);S.rows.push(Object.assign(blankE(),{data:p.data,w:p.w,h:p.h}))}catch(e){await tell('사진을 불러오지 못했습니다.');return}
   save();renderInspect();
 }
 async function addFiles(inp){
   const files=Array.from(inp.files||[]);inp.value='';if(!files.length)return;
-  const idx=[cur];for(let i=cur+1;i<S.rows.length;i++)if(!S.rows[i].data)idx.push(i);
-  while(idx.length<files.length&&S.rows.length<MAXN){S.rows.push(blankE());idx.push(S.rows.length-1)}
-  const use=files.slice(0,idx.length),done=busy('사진 처리 중... ('+use.length+'장)');let failed=0;
-  for(let k=0;k<use.length;k++){try{const p=await fileToPhoto(use[k]);Object.assign(S.rows[idx[k]],{data:p.data,w:p.w,h:p.h})}catch(e){failed++}}
+  const room=MAXN-S.rows.length,use=files.slice(0,Math.max(0,room));
+  if(!use.length){await tell('최대 '+MAXN+'장까지 가능합니다.');return}
+  const done=busy('사진 처리 중... ('+use.length+'장)');let failed=0;
+  for(let k=0;k<use.length;k++){try{const p=await fileToPhoto(use[k]);S.rows.push(Object.assign(blankE(),{data:p.data,w:p.w,h:p.h}))}catch(e){failed++}}
   done();save();renderInspect();
-  const m=[];if(files.length>use.length)m.push('최대 '+MAXN+'건이라 '+(files.length-use.length)+'장은 제외되었습니다.');if(failed)m.push(failed+'장은 불러오지 못했습니다.');
+  const m=[];if(files.length>use.length)m.push('최대 '+MAXN+'장이라 '+(files.length-use.length)+'장은 제외되었습니다.');if(failed)m.push(failed+'장은 불러오지 못했습니다.');
   if(m.length)await tell(m.join('\n'));
 }
 async function complete(){
-  if(!entries().length){await tell('불량 사진 또는 내용을 입력해 주세요.');return}
-  S.lineout=false;S.reason='';S.screen='review';save();render();window.scrollTo(0,0);
+  if(!entries().length){await tell('사진을 1장 이상 올려 주세요.');return}
+  S.lineout=false;S.reason='';S.screen='punch';save();render();window.scrollTo(0,0);
 }
 function lineOut(){
   const d=document.createElement('div');d.className='ov';
@@ -339,25 +321,47 @@ function lineOut(){
   const t=d.querySelector('textarea'),er=d.querySelector('.err'),row=d.querySelector('.dlg>div');t.value=S.reason||'';
   const c=document.createElement('button');c.textContent='취소';c.onclick=()=>d.remove();row.appendChild(c);
   const o=document.createElement('button');o.className='p';o.textContent='라인아웃';
-  o.onclick=()=>{const v=t.value.trim();if(!v){er.style.display='';t.focus();return}d.remove();S.lineout=true;S.reason=v;S.screen='review';save();render();window.scrollTo(0,0)};
+  o.onclick=()=>{const v=t.value.trim();if(!v){er.style.display='';t.focus();return}d.remove();S.lineout=true;S.reason=v;S.screen='punch';save();render();window.scrollTo(0,0)};
   row.appendChild(o);document.body.appendChild(d);setTimeout(()=>t.focus(),50);
 }
 function dataRows(){const E=entries();return S.lineout?[Object.assign(blankE(),{detail:'[라인아웃] '+S.reason})].concat(E):E}
+/* ---------- 2-1. 펀치리스트 사진 ---------- */
+function renderPunch(){
+  const y=window.scrollY,n=S.punch.length;
+  $('app').innerHTML=`<section class="card"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · 검수자 ${esc(S.inspector)} · ${esc(S.date)}</div><div class="serial" style="font-size:1.2rem">${esc(serial())}</div>${S.lineout?`<div class="err" style="margin-top:.4rem">라인아웃 · 사유: ${esc(S.reason)}</div>`:''}<div class="meta" style="margin-top:.4rem">불량 사진 ${entries().length}장</div></section>
+  <section class="card"><h1 style="font-size:1.3rem">펀치리스트 사진 첨부</h1><p class="sub" style="margin-bottom:0">작성한 펀치리스트 사진 1장을 촬영하거나 앨범에서 올려 주세요. 엑셀 표 바깥(Q열)에 들어갑니다. 첨부하면 엑셀 저장 버튼이 나타납니다.</p></section>
+  <div class="btns"><button class="cam" onclick="$('pCam').click()">📷 ${n?'다시 촬영':'촬영'}</button><button class="cam alt" onclick="$('pPick').click()">🖼 앨범에서<br>${n?'다시 선택':'선택'}</button></div>
+  <div class="meta" style="margin:0 .25rem .6rem">펀치리스트 ${n}/1장</div>
+  ${n?`<div class="thumbs" style="margin-bottom:.75rem;grid-template-columns:minmax(0,1fr)">${S.punch.map((p,i)=>`<div class="th"><img src="${p.data}" alt=""><div class="thr"><b>#${i+1}</b><button class="dx" onclick="delPunch(${i})">삭제</button></div></div>`).join('')}</div>`:'<div class="empty">아직 펀치리스트 사진이 없습니다.</div>'}
+  <div class="sticky">${n?'<button class="big" onclick="goReview()">엑셀 저장 화면으로</button>':''}
+  <button class="mid" onclick="S.lineout=false;S.screen=\'inspect\';save();render();window.scrollTo(0,0)">◀ 불량 사진 화면으로</button></div>
+  <input id="pCam" type="file" accept="image/*" capture="environment" hidden onchange="addPunch(this)">
+  <input id="pPick" type="file" accept="image/*" hidden onchange="addPunch(this)">`;
+  window.scrollTo(0,y);
+}
+function goReview(){if(!S.punch.length)return;S.screen='review';save();render();window.scrollTo(0,0)}
+async function delPunch(i){if(!(await ask('펀치리스트 #'+(i+1)+' 을(를) 삭제할까요?','삭제')))return;S.punch.splice(i,1);save();renderPunch()}
+async function addPunch(inp){
+  const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+  try{const p=await fileToPhoto(f);S.punch=[{data:p.data,w:p.w,h:p.h}]}catch(e){await tell('사진을 불러오지 못했습니다.');return}
+  save();renderPunch();
+}
 /* ---------- 3. 확인 및 엑셀 저장 ---------- */
 function renderReview(){
   const E=entries();
   $('app').innerHTML=`<div class="rv"><section class="card sum"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · IQC</div><div class="serial">${esc(serial())}</div>
-  <div class="meta" style="margin-top:.4rem">검수자 ${esc(S.inspector)} · 검사일 ${esc(S.date)}</div><div class="err" style="margin-top:.5rem">${S.lineout?'라인아웃 · ':''}불량 ${E.length}건</div>${S.lineout?`<div class="meta" style="margin-top:.4rem">사유: ${esc(S.reason)}</div>`:''}</section>
-  <section class="card thb"><div class="thumbs">${E.map((p,i)=>`<div class="th">${p.data?`<img src="${p.data}" alt="">`:''}<p><b>#${i+1}</b> ${esc([p.cause,p.grp,p.sub,p.part].filter(Boolean).join(' / '))}<br>${esc(p.detail||'')}</p></div>`).join('')}</div></section>
+  <div class="meta" style="margin-top:.4rem">검수자 ${esc(S.inspector)} · 검사일 ${esc(S.date)}</div><div class="err" style="margin-top:.5rem">${S.lineout?'라인아웃 · ':''}사진 ${E.length}장 · 펀치리스트 1장</div>${S.lineout?`<div class="meta" style="margin-top:.4rem">사유: ${esc(S.reason)}</div>`:''}</section>
+  <section class="card thb"><div class="thumbs">${E.map((p,i)=>`<div class="th">${p.data?`<img src="${p.data}" alt="">`:''}<p><b>#${i+1}</b></p></div>`).join('')}</div></section>
   <div class="rb" style="display:grid;gap:.5rem"><button class="big" onclick="downloadXlsx()">엑셀(.xlsx) 저장${S.saved?' (다시 저장)':''}</button>
-  <div class="meta" style="text-align:center">저장한 엑셀에서 A4:O 행을 복사해 취합 파일에 붙여넣으세요</div>
+  <div class="meta" style="text-align:center">저장한 엑셀에서 A4:O 행을 복사해 취합 파일에 붙여넣으세요 (펀치리스트 사진은 표 밖 Q열에 있습니다)</div>
+  <button class="mid" onclick="S.screen='punch';save();render();window.scrollTo(0,0)">펀치리스트 사진 수정</button>
   <button class="mid" onclick="S.lineout=false;S.screen='inspect';save();render();window.scrollTo(0,0)">검사 화면으로 돌아가기</button>
   ${S.saved?`<button class="mid" onclick="newUnit()">다음 호기 시작</button>`:''}</div></div>`;
 }
-function newUnit(){S.lineout=false;S.reason='';S.rows=[blankE()];S.rest='';S.saved=false;S.screen='start';save();render();window.scrollTo(0,0)}
+function newUnit(){S.lineout=false;S.reason='';S.rows=[];S.punch=[];S.rest='';S.saved=false;S.screen='start';save();render();window.scrollTo(0,0)}
 async function resetAll(skip){
   if(skip!==true&&!(await ask('현재 입력한 사진과 내용을 지우고 처음 화면으로 돌아갈까요?\n저장하지 않은 데이터는 사라집니다.','처음으로')))return;
-  S={screen:'start',model:'',vendor:'',pfx:'',rest:'',inspector:S.inspector,date:S.date||today(),rows:[blankE()],saved:false,lineout:false,reason:''};
+  S={screen:'start',model:'',vendor:'',pfx:'',rest:'',inspector:S.inspector,date:S.date||today(),rows:[],punch:[],saved:false,lineout:false,reason:''};
   save();render();window.scrollTo(0,0);
 }
 /* ---------- 엑셀: 취합 시트와 동일한 A~O열 (3행 머리글, 4행부터 데이터) ---------- */
@@ -378,7 +382,7 @@ function stylesXml(){
   '<cellXfs count="6"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+xf(1,2,1,C)+xf(2,0,0,'horizontal="left" vertical="center"')+xf(0,0,1,C)+xf(0,0,1,C)+xf(0,0,1,C,164)+'</cellXfs></styleSheet>';
 }
 function sheetXml(){
-  const E=dataRows(),R={},ht={1:33,3:48},add=(r,x)=>{R[r]=(R[r]||'')+x},hasP=E.some(p=>p.data),I=dInfo(S.date);
+  const E=dataRows(),R={},ht={1:33,3:48},add=(r,x)=>{R[r]=(R[r]||'')+x},hasP=E.some(p=>p.data)||S.punch.length>0,I=dInfo(S.date);
   add(1,cell('A1',2,serial()+' IQC 불량 정리'));
   ['NO','날짜','요일','주차','검사구분','모델명','검수자','시리얼번호','발생원인','불량현상_구분','불량현상_세부','대상부품/부위','불량현상_상세','결함등급','IMAGE'].forEach((t,i)=>add(3,cell('ABCDEFGHIJKLMNO'[i]+3,1,t)));
   E.forEach((p,i)=>{const r=FIRST+i;ht[r]=ROWPT;
@@ -386,22 +390,27 @@ function sheetXml(){
     add(r,`<c r="A${r}" s="3"><f>${xe(`IF(B${r}="","",ROW()-3)`)}</f><v>${i+1}</v></c><c r="B${r}" s="5"><v>${I.ser}</v></c>`+
       `<c r="C${r}" s="3" t="str"><f>${xe(`IF(B${r}="","",CHOOSE(WEEKDAY(B${r},2),"월","화","수","목","금","토","일"))`)}</f><v>${I.day}</v></c>`+
       `<c r="D${r}" s="3" t="str"><f>${xe(`IF(B${r}="","",${wk})`)}</f><v>${I.wk}</v></c>`+
-      cell('E'+r,3,'IQC')+cell('F'+r,3,S.model)+cell('G'+r,3,S.inspector.trim())+cell('H'+r,3,serial())+cell('I'+r,3,p.cause)+cell('J'+r,3,p.grp)+cell('K'+r,3,p.sub)+cell('L'+r,3,p.part)+cell('M'+r,4,p.detail)+cell('N'+r,3,p.grade)+`<c r="O${r}" s="3"/>`)});
+      cell('E'+r,3,'IQC')+cell('F'+r,3,S.model)+cell('G'+r,3,S.inspector.trim())+cell('H'+r,3,serial())+cell('I'+r,3,'')+cell('J'+r,3,'')+cell('K'+r,3,'')+cell('L'+r,3,'')+cell('M'+r,4,p.detail||'')+cell('N'+r,3,'')+`<c r="O${r}" s="3"/>`)});
   const W=[6,11.6,5,6.25,8.25,11.25,7.1,31.1,14,18,22,20,35,10,20.9];
   const rows=Object.keys(R).map(Number).sort((a,b)=>a-b).map(r=>`<row r="${r}"${ht[r]?` ht="${ht[r]}" customHeight="1"`:''}>${R[r]}</row>`).join('');
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><cols>'+W.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols><sheetData>'+rows+'</sheetData><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>'+(hasP?'<drawing r:id="rId1"/>':'')+'</worksheet>';
 }
+const PW=420,rowPx=r=>r===0?44:r===1?20:r===2?64:80;
+function punchAnchors(){let y=0;return S.punch.map(p=>{const h=Math.round(PW*p.h/p.w);let r=0,off=y;while(off>=rowPx(r)){off-=rowPx(r);r++}y+=h+12;return{r,off,w:PW,h}})}
 function drawingXml(){
   const EMU=9525;let a='',j=0;
   dataRows().forEach((p,i)=>{
     if(!p.data)return;j++;const r=FIRST-1+i;
-    a+=`<xdr:twoCellAnchor editAs="twoCell"><xdr:from><xdr:col>14</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>15</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r+1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${j+1}" name="불량 ${i+1}"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${j}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`;
+    a+=`<xdr:twoCellAnchor editAs="twoCell"><xdr:from><xdr:col>14</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>15</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r+1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${j+1}" name="사진 ${i+1}"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${j}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`;
   });
+  const np=dataRows().filter(p=>p.data).length;
+  punchAnchors().forEach((q,k)=>{const E=9525;
+    a+=`<xdr:oneCellAnchor><xdr:from><xdr:col>16</xdr:col><xdr:colOff>95250</xdr:colOff><xdr:row>${q.r}</xdr:row><xdr:rowOff>${q.off*E}</xdr:rowOff></xdr:from><xdr:ext cx="${q.w*E}" cy="${q.h*E}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${1000+k}" name="펀치리스트 ${k+1}"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${np+k+1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${q.w*E}" cy="${q.h*E}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`});
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+a+'</xdr:wsDr>';
 }
 function buildXlsxBlob(){
   const H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n',R='http://schemas.openxmlformats.org/officeDocument/2006/relationships',PK='http://schemas.openxmlformats.org/package/2006/relationships';
-  const photos=dataRows().filter(p=>p.data),hasP=photos.length>0;
+  const photos=dataRows().filter(p=>p.data).concat(S.punch),hasP=photos.length>0;
   const files=[
     {name:'[Content_Types].xml',text:H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+(hasP?'<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>':'')+'</Types>'},
     {name:'_rels/.rels',text:H+`<Relationships xmlns="${PK}"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
