@@ -329,7 +329,7 @@ function dataRows(){const E=entries();return S.lineout?[Object.assign(blankE(),{
 function renderPunch(){
   const y=window.scrollY,n=S.punch.length;
   $('app').innerHTML=`<section class="card"><div class="meta">${esc(S.model)}${S.vendor?' '+esc(S.vendor):''} · 검수자 ${esc(S.inspector)} · ${esc(S.date)}</div><div class="serial" style="font-size:1.2rem">${esc(serial())}</div>${S.lineout?`<div class="err" style="margin-top:.4rem">라인아웃 · 사유: ${esc(S.reason)}</div>`:''}<div class="meta" style="margin-top:.4rem">불량 사진 ${entries().length}장</div></section>
-  <section class="card"><h1 style="font-size:1.3rem">펀치리스트 사진 첨부</h1><p class="sub" style="margin-bottom:0">작성한 펀치리스트 사진 1장을 촬영하거나 앨범에서 올려 주세요. 엑셀 표 바깥(Q열)에 들어갑니다. 첨부하면 엑셀 저장 버튼이 나타납니다.</p></section>
+  <section class="card"><h1 style="font-size:1.3rem">펀치리스트 사진 첨부</h1><p class="sub" style="margin-bottom:0">작성한 펀치리스트 사진 1장을 촬영하거나 앨범에서 올려 주세요. 엑셀 맨 오른쪽 P열(PUNCH LIST)에 시리얼당 1장 들어갑니다. 첨부하면 엑셀 저장 버튼이 나타납니다.</p></section>
   <div class="btns"><button class="cam" onclick="$('pCam').click()">📷 ${n?'다시 촬영':'촬영'}</button><button class="cam alt" onclick="$('pPick').click()">🖼 앨범에서<br>${n?'다시 선택':'선택'}</button></div>
   <div class="meta" style="margin:0 .25rem .6rem">펀치리스트 ${n}/1장</div>
   ${n?`<div class="thumbs" style="margin-bottom:.75rem;grid-template-columns:minmax(0,1fr)">${S.punch.map((p,i)=>`<div class="th"><img src="${p.data}" alt=""><div class="thr"><b>#${i+1}</b><button class="dx" onclick="delPunch(${i})">삭제</button></div></div>`).join('')}</div>`:'<div class="empty">아직 펀치리스트 사진이 없습니다.</div>'}
@@ -353,7 +353,7 @@ function renderReview(){
   <div class="meta" style="margin-top:.4rem">검수자 ${esc(S.inspector)} · 검사일 ${esc(S.date)}</div><div class="err" style="margin-top:.5rem">${S.lineout?'라인아웃 · ':''}사진 ${E.length}장 · 펀치리스트 1장</div>${S.lineout?`<div class="meta" style="margin-top:.4rem">사유: ${esc(S.reason)}</div>`:''}</section>
   <section class="card thb"><div class="thumbs">${E.map((p,i)=>`<div class="th">${p.data?`<img src="${p.data}" alt="">`:''}<p><b>#${i+1}</b></p></div>`).join('')}</div></section>
   <div class="rb" style="display:grid;gap:.5rem"><button class="big" onclick="downloadXlsx()">엑셀(.xlsx) 저장${S.saved?' (다시 저장)':''}</button>
-  <div class="meta" style="text-align:center">저장한 엑셀에서 A4:O 행을 복사해 취합 파일에 붙여넣으세요 (펀치리스트 사진은 표 밖 Q열에 있습니다)</div>
+  <div class="meta" style="text-align:center">저장한 엑셀에서 A4:P 행을 복사해 취합 파일에 붙여넣으세요 (펀치리스트 사진은 맨 오른쪽 P열에 있습니다)</div>
   <button class="mid" onclick="S.screen='punch';save();render();window.scrollTo(0,0)">펀치리스트 사진 수정</button>
   <button class="mid" onclick="S.lineout=false;S.screen='inspect';save();render();window.scrollTo(0,0)">검사 화면으로 돌아가기</button>
   ${S.saved?`<button class="mid" onclick="newUnit()">다음 호기 시작</button>`:''}</div></div>`;
@@ -366,6 +366,7 @@ async function resetAll(skip){
 }
 /* ---------- 엑셀: 취합 시트와 동일한 A~O열 (3행 머리글, 4행부터 데이터) ---------- */
 const ROWPT=60,ROWPX=80,COLO_PX=151,BOX_W=140,BOX_H=74,FIRST=4;
+const punchArr=()=>S.punch;
 const cell=(ref,s,t)=>t===''||t==null?`<c r="${ref}" s="${s}"/>`:`<c r="${ref}" s="${s}" t="inlineStr"><is><t xml:space="preserve">${xe(t)}</t></is></c>`;
 function dInfo(ds){
   const [y,m,d]=ds.split('-').map(Number),D=864e5,t=Date.UTC(y,m-1,d),iso=x=>(new Date(x).getUTCDay()+6)%7+1;
@@ -384,19 +385,17 @@ function stylesXml(){
 function sheetXml(){
   const E=dataRows(),R={},ht={1:33,3:48},add=(r,x)=>{R[r]=(R[r]||'')+x},hasP=E.some(p=>p.data)||S.punch.length>0,I=dInfo(S.date);
   add(1,cell('A1',2,serial()+' IQC 불량 정리'));
-  ['NO','날짜','요일','주차','검사구분','모델명','검수자','시리얼번호','발생원인','불량현상_구분','불량현상_세부','대상부품/부위','불량현상_상세','결함등급','IMAGE'].forEach((t,i)=>add(3,cell('ABCDEFGHIJKLMNO'[i]+3,1,t)));
+  ['NO','날짜','요일','주차','검사구분','모델명','검수자','시리얼번호','발생원인','불량현상_구분','불량현상_세부','대상부품/부위','불량현상_상세','결함등급','IMAGE','PUNCH LIST'].forEach((t,i)=>add(3,cell('ABCDEFGHIJKLMNOP'[i]+3,1,t)));
   E.forEach((p,i)=>{const r=FIRST+i;ht[r]=ROWPT;
     const wk=`(MAX(0,INT((B${r}-(DATE(YEAR(B${r}),MONTH(B${r}),1)+IF(WEEKDAY(DATE(YEAR(B${r}),MONTH(B${r}),1),2)>5,8-WEEKDAY(DATE(YEAR(B${r}),MONTH(B${r}),1),2),1-WEEKDAY(DATE(YEAR(B${r}),MONTH(B${r}),1),2))))/7))+1)&"주차"`;
     add(r,`<c r="A${r}" s="3"><f>${xe(`IF(B${r}="","",ROW()-3)`)}</f><v>${i+1}</v></c><c r="B${r}" s="5"><v>${I.ser}</v></c>`+
       `<c r="C${r}" s="3" t="str"><f>${xe(`IF(B${r}="","",CHOOSE(WEEKDAY(B${r},2),"월","화","수","목","금","토","일"))`)}</f><v>${I.day}</v></c>`+
       `<c r="D${r}" s="3" t="str"><f>${xe(`IF(B${r}="","",${wk})`)}</f><v>${I.wk}</v></c>`+
-      cell('E'+r,3,'IQC')+cell('F'+r,3,S.model)+cell('G'+r,3,S.inspector.trim())+cell('H'+r,3,serial())+cell('I'+r,3,'')+cell('J'+r,3,'')+cell('K'+r,3,'')+cell('L'+r,3,'')+cell('M'+r,4,p.detail||'')+cell('N'+r,3,'')+`<c r="O${r}" s="3"/>`)});
-  const W=[6,11.6,5,6.25,8.25,11.25,7.1,31.1,14,18,22,20,35,10,20.9];
+      cell('E'+r,3,'IQC')+cell('F'+r,3,S.model)+cell('G'+r,3,S.inspector.trim())+cell('H'+r,3,serial())+cell('I'+r,3,'')+cell('J'+r,3,'')+cell('K'+r,3,'')+cell('L'+r,3,'')+cell('M'+r,4,p.detail||'')+cell('N'+r,3,'')+`<c r="O${r}" s="3"/>`+`<c r="P${r}" s="3"/>`)});
+  const W=[6,11.6,5,6.25,8.25,11.25,7.1,31.1,14,18,22,20,35,10,20.9,20.9];
   const rows=Object.keys(R).map(Number).sort((a,b)=>a-b).map(r=>`<row r="${r}"${ht[r]?` ht="${ht[r]}" customHeight="1"`:''}>${R[r]}</row>`).join('');
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><cols>'+W.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols><sheetData>'+rows+'</sheetData><pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>'+(hasP?'<drawing r:id="rId1"/>':'')+'</worksheet>';
 }
-const PW=420,rowPx=r=>r===0?44:r===1?20:r===2?64:80;
-function punchAnchors(){let y=0;return S.punch.map(p=>{const h=Math.round(PW*p.h/p.w);let r=0,off=y;while(off>=rowPx(r)){off-=rowPx(r);r++}y+=h+12;return{r,off,w:PW,h}})}
 function drawingXml(){
   const EMU=9525;let a='',j=0;
   dataRows().forEach((p,i)=>{
@@ -404,8 +403,8 @@ function drawingXml(){
     a+=`<xdr:twoCellAnchor editAs="twoCell"><xdr:from><xdr:col>14</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>15</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${r+1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${j+1}" name="사진 ${i+1}"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${j}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`;
   });
   const np=dataRows().filter(p=>p.data).length;
-  punchAnchors().forEach((q,k)=>{const E=9525;
-    a+=`<xdr:oneCellAnchor><xdr:from><xdr:col>16</xdr:col><xdr:colOff>95250</xdr:colOff><xdr:row>${q.r}</xdr:row><xdr:rowOff>${q.off*E}</xdr:rowOff></xdr:from><xdr:ext cx="${q.w*E}" cy="${q.h*E}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${1000+k}" name="펀치리스트 ${k+1}"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${np+k+1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${q.w*E}" cy="${q.h*E}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`});
+  punchArr().forEach((q,k)=>{
+    a+=`<xdr:twoCellAnchor editAs="twoCell"><xdr:from><xdr:col>15</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${FIRST-1}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:to><xdr:col>16</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>${FIRST}</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${1000+k}" name="펀치리스트 ${k+1}"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="rId${np+k+1}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:twoCellAnchor>`});
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'+a+'</xdr:wsDr>';
 }
 function buildXlsxBlob(){
